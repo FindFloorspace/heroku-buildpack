@@ -122,27 +122,27 @@ PACKAGES_TO_INSTALL=""
 for PACKAGE in $PACKAGES; do
   PACKAGES_TO_INSTALL="$PACKAGES_TO_INSTALL $PACKAGE"
 done
-apt-get $APT_OPTIONS -y install $PACKAGES_TO_INSTALL | indent
+apt-get $APT_OPTIONS -y -d install $PACKAGES_TO_INSTALL | indent
 
 
-topic "Installing Chrome..."
-cd $BUILD_DIR 
-wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-apt-get install ./google-chrome-stable_current_amd64.deb
-cd -
+# Try 1
+# topic "Installing Chrome..."
+# cd $BUILD_DIR 
+# wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+# apt-get install ./google-chrome-stable_current_amd64.deb
+# cd -
 
-
+# Try 2
 # curl -fSsL https://dl.google.com/linux/linux_signing_key.pub | gpg --dearmor | sudo tee /usr/share/keyrings/google-chrome.gpg > /dev/null
 # echo deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome.gpg] http://dl.google.com/linux/chrome/deb/ stable main | sudo tee /etc/apt/sources.list.d/google-chrome.list
 # sudo apt update
 # sudo apt install google-chrome-stable
 
-# mkdir -p $BUILD_DIR/.apt
-
-# for DEB in $(ls -1 $APT_CACHE_DIR/archives/*.deb); do
-#   topic "Installing $(basename $DEB)"
-#   dpkg -x $DEB $BUILD_DIR/.apt/
-# done
+mkdir -p $BUILD_DIR/.apt
+for DEB in $(ls -1 $APT_CACHE_DIR/archives/*.deb); do
+  topic "Installing $(basename $DEB)"
+  dpkg -x $DEB $BUILD_DIR/.apt/
+done
 
 # topic "Writing profile script"
 # mkdir -p $BUILD_DIR/.profile.d
