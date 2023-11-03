@@ -100,17 +100,6 @@ case "${STACK}" in
     error "STACK must be 'heroku-18', 'heroku-20' or 'heroku-22', not '${STACK}'."
 esac
 
-if [ ! -f $CACHE_DIR/PURGED_CACHE_V1 ]; then
-  topic "Purging cache"
-  rm -rf $CACHE_DIR/apt
-  rm -rf $CACHE_DIR/archives
-  rm -rf $CACHE_DIR/lists
-  touch $CACHE_DIR/PURGED_CACHE_V1
-fi
-
-# topic "Installing Google Chrome from the $channel channel."
-# PACKAGES="$PACKAGES https://dl.google.com/linux/direct/google-chrome-${channel}_current_amd64.deb"
-
 APT_CACHE_DIR="$CACHE_DIR/apt/cache"
 APT_STATE_DIR="$CACHE_DIR/apt/state"
 
@@ -128,14 +117,10 @@ done
 apt-get $APT_OPTIONS -y -d install $PACKAGES_TO_INSTALL | indent
 
 topic "Downloading Chrome..."
-wget -q -o $BUILD_DIR/.apt/google-chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+wget -q -o $APT_CACHE_DIR/archives/google-chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
 
-# curl -fSsL https://dl.google.com/linux/linux_signing_key.pub | gpg --dearmor | sudo tee /usr/share/keyrings/google-chrome.gpg > /dev/null
-# echo deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome.gpg] http://dl.google.com/linux/chrome/deb/ stable main | sudo tee /etc/apt/sources.list.d/google-chrome.list
-# sudo apt update
-# sudo apt install google-chrome-stable
-# mkdir -p $BUILD_DIR/.apt
-
+# Install all the debs in the archive dir
+mkdir -p $BUILD_DIR/.apt
 for DEB in $(ls -1 $APT_CACHE_DIR/archives/*.deb); do
   topic "Installing $(basename $DEB)"
   dpkg -x $DEB $BUILD_DIR/.apt/
