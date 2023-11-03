@@ -122,13 +122,13 @@ PACKAGES_TO_INSTALL=""
 for PACKAGE in $PACKAGES; do
   PACKAGES_TO_INSTALL="$PACKAGES_TO_INSTALL $PACKAGE"
 done
-apt-get $APT_OPTIONS -y -d install $PACKAGES_TO_INSTALL | indent
+apt-get $APT_OPTIONS -y install $PACKAGES_TO_INSTALL | indent
 
 
 topic "Installing Chrome..."
 cd $BUILD_DIR 
-wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-apt install ./google-chrome-stable_current_amd64.deb
+wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+apt-get install ./google-chrome-stable_current_amd64.deb
 cd -
 
 
