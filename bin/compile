@@ -34,6 +34,9 @@ function indent() {
   esac
 }
 
+BIN=chrome/chrome
+SHIM=google-chrome-stable
+
 # # Detect requested channel or default to stable
 # if [ -f $ENV_DIR/GOOGLE_CHROME_CHANNEL ]; then
 #   channel=$(cat $ENV_DIR/GOOGLE_CHROME_CHANNEL)
@@ -124,77 +127,71 @@ for PACKAGE in $PACKAGES; do
 done
 apt-get $APT_OPTIONS -y -d install $PACKAGES_TO_INSTALL | indent
 
+topic "Downloading Chrome..."
+wget -q -o $BUILD_DIR/.apt/google-chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
 
-# Try 1
-# topic "Installing Chrome..."
-# cd $BUILD_DIR 
-# wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-# apt-get install ./google-chrome-stable_current_amd64.deb
-# cd -
-
-# Try 2
 # curl -fSsL https://dl.google.com/linux/linux_signing_key.pub | gpg --dearmor | sudo tee /usr/share/keyrings/google-chrome.gpg > /dev/null
 # echo deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome.gpg] http://dl.google.com/linux/chrome/deb/ stable main | sudo tee /etc/apt/sources.list.d/google-chrome.list
 # sudo apt update
 # sudo apt install google-chrome-stable
+# mkdir -p $BUILD_DIR/.apt
 
-mkdir -p $BUILD_DIR/.apt
 for DEB in $(ls -1 $APT_CACHE_DIR/archives/*.deb); do
   topic "Installing $(basename $DEB)"
   dpkg -x $DEB $BUILD_DIR/.apt/
 done
 
-# topic "Writing profile script"
-# mkdir -p $BUILD_DIR/.profile.d
-# cat <<EOF >$BUILD_DIR/.profile.d/000_apt.sh
-# export PATH="\$HOME/.apt/usr/bin:\$PATH"
-# export LD_LIBRARY_PATH="\$HOME/.apt/usr/lib/x86_64-linux-gnu:\$HOME/.apt/usr/lib/i386-linux-gnu:\$HOME/.apt/usr/lib:\$LD_LIBRARY_PATH"
-# export LIBRARY_PATH="\$HOME/.apt/usr/lib/x86_64-linux-gnu:\$HOME/.apt/usr/lib/i386-linux-gnu:\$HOME/.apt/usr/lib:\$LIBRARY_PATH"
-# export INCLUDE_PATH="\$HOME/.apt/usr/include:\$HOME/.apt/usr/include/x86_64-linux-gnu:\$INCLUDE_PATH"
-# export CPATH="\$INCLUDE_PATH"
-# export CPPPATH="\$INCLUDE_PATH"
-# export PKG_CONFIG_PATH="\$HOME/.apt/usr/lib/x86_64-linux-gnu/pkgconfig:\$HOME/.apt/usr/lib/i386-linux-gnu/pkgconfig:\$HOME/.apt/usr/lib/pkgconfig:\$PKG_CONFIG_PATH"
-# EOF
+topic "Writing profile script"
+mkdir -p $BUILD_DIR/.profile.d
+cat <<EOF >$BUILD_DIR/.profile.d/000_apt.sh
+export PATH="\$HOME/.apt/usr/bin:\$PATH"
+export LD_LIBRARY_PATH="\$HOME/.apt/usr/lib/x86_64-linux-gnu:\$HOME/.apt/usr/lib/i386-linux-gnu:\$HOME/.apt/usr/lib:\$LD_LIBRARY_PATH"
+export LIBRARY_PATH="\$HOME/.apt/usr/lib/x86_64-linux-gnu:\$HOME/.apt/usr/lib/i386-linux-gnu:\$HOME/.apt/usr/lib:\$LIBRARY_PATH"
+export INCLUDE_PATH="\$HOME/.apt/usr/include:\$HOME/.apt/usr/include/x86_64-linux-gnu:\$INCLUDE_PATH"
+export CPATH="\$INCLUDE_PATH"
+export CPPPATH="\$INCLUDE_PATH"
+export PKG_CONFIG_PATH="\$HOME/.apt/usr/lib/x86_64-linux-gnu/pkgconfig:\$HOME/.apt/usr/lib/i386-linux-gnu/pkgconfig:\$HOME/.apt/usr/lib/pkgconfig:\$PKG_CONFIG_PATH"
+EOF
 
-# export PATH="$BUILD_DIR/.apt/usr/bin:$PATH"
-# export LD_LIBRARY_PATH="$BUILD_DIR/.apt/usr/lib/x86_64-linux-gnu:$BUILD_DIR/.apt/usr/lib/i386-linux-gnu:$BUILD_DIR/.apt/usr/lib:$LD_LIBRARY_PATH"
-# export LIBRARY_PATH="$BUILD_DIR/.apt/usr/lib/x86_64-linux-gnu:$BUILD_DIR/.apt/usr/lib/i386-linux-gnu:$BUILD_DIR/.apt/usr/lib:$LIBRARY_PATH"
-# export INCLUDE_PATH="$BUILD_DIR/.apt/usr/include:$BUILD_DIR/.apt/usr/include/x86_64-linux-gnu:$INCLUDE_PATH"
-# export CPATH="$INCLUDE_PATH"
-# export CPPPATH="$INCLUDE_PATH"
-# export PKG_CONFIG_PATH="$BUILD_DIR/.apt/usr/lib/x86_64-linux-gnu/pkgconfig:$BUILD_DIR/.apt/usr/lib/i386-linux-gnu/pkgconfig:$BUILD_DIR/.apt/usr/lib/pkgconfig:$PKG_CONFIG_PATH"
+export PATH="$BUILD_DIR/.apt/usr/bin:$PATH"
+export LD_LIBRARY_PATH="$BUILD_DIR/.apt/usr/lib/x86_64-linux-gnu:$BUILD_DIR/.apt/usr/lib/i386-linux-gnu:$BUILD_DIR/.apt/usr/lib:$LD_LIBRARY_PATH"
+export LIBRARY_PATH="$BUILD_DIR/.apt/usr/lib/x86_64-linux-gnu:$BUILD_DIR/.apt/usr/lib/i386-linux-gnu:$BUILD_DIR/.apt/usr/lib:$LIBRARY_PATH"
+export INCLUDE_PATH="$BUILD_DIR/.apt/usr/include:$BUILD_DIR/.apt/usr/include/x86_64-linux-gnu:$INCLUDE_PATH"
+export CPATH="$INCLUDE_PATH"
+export CPPPATH="$INCLUDE_PATH"
+export PKG_CONFIG_PATH="$BUILD_DIR/.apt/usr/lib/x86_64-linux-gnu/pkgconfig:$BUILD_DIR/.apt/usr/lib/i386-linux-gnu/pkgconfig:$BUILD_DIR/.apt/usr/lib/pkgconfig:$PKG_CONFIG_PATH"
 
-# #give environment to later buildpacks
-# export | grep -E -e ' (PATH|LD_LIBRARY_PATH|LIBRARY_PATH|INCLUDE_PATH|CPATH|CPPPATH|PKG_CONFIG_PATH)='  > "$LP_DIR/export"
+#give environment to later buildpacks
+export | grep -E -e ' (PATH|LD_LIBRARY_PATH|LIBRARY_PATH|INCLUDE_PATH|CPATH|CPPPATH|PKG_CONFIG_PATH)='  > "$LP_DIR/export"
 
-# topic "Rewrite package-config files"
-# find $BUILD_DIR/.apt -type f -ipath '*/pkgconfig/*.pc' | xargs --no-run-if-empty -n 1 sed -i -e 's!^prefix=\(.*\)$!prefix='"$BUILD_DIR"'/.apt\1!g'
+topic "Rewrite package-config files"
+find $BUILD_DIR/.apt -type f -ipath '*/pkgconfig/*.pc' | xargs --no-run-if-empty -n 1 sed -i -e 's!^prefix=\(.*\)$!prefix='"$BUILD_DIR"'/.apt\1!g'
 
-# topic "Creating google-chrome shims"
+topic "Creating google-chrome shims"
 
-# BIN_DIR=$BUILD_DIR/.apt/usr/bin
+BIN_DIR=$BUILD_DIR/.apt/usr/bin
 
-# rm $BIN_DIR/$SHIM
-# cat <<EOF >$BIN_DIR/$SHIM
-# #!/usr/bin/env bash
+rm $BIN_DIR/$SHIM
+cat <<EOF >$BIN_DIR/$SHIM
+#!/usr/bin/env bash
 
-# # prevent from any forced shared libraries injection
-# unset LD_PRELOAD
+# prevent from any forced shared libraries injection
+unset LD_PRELOAD
 
-# if [ \$1 = "--version" ]; then
-#   exec \$HOME/.apt/opt/google/$BIN --version
-# elif [ \$1 = "--product-version" ]; then
-#   exec \$HOME/.apt/opt/google/$BIN --product-version
-# else
-#   exec \$HOME/.apt/opt/google/$BIN --headless --no-sandbox --disable-gpu --remote-debugging-port=9222 "\$@"
-# fi
-# EOF
-# chmod +x $BIN_DIR/$SHIM
-# cp $BIN_DIR/$SHIM $BIN_DIR/google-chrome
+if [ \$1 = "--version" ]; then
+  exec \$HOME/.apt/opt/google/$BIN --version
+elif [ \$1 = "--product-version" ]; then
+  exec \$HOME/.apt/opt/google/$BIN --product-version
+else
+  exec \$HOME/.apt/opt/google/$BIN --headless --no-sandbox --disable-gpu --remote-debugging-port=9222 "\$@"
+fi
+EOF
+chmod +x $BIN_DIR/$SHIM
+cp $BIN_DIR/$SHIM $BIN_DIR/google-chrome
 
-# # export the chrome binary location, so it's easier to tell chromedriver
-# # about the non-standard location
-# cat <<EOF >$BUILD_DIR/.profile.d/010_google-chrome.sh
-# export GOOGLE_CHROME_BIN="\$HOME/.apt/opt/google/$BIN"
-# export GOOGLE_CHROME_SHIM="\$HOME/.apt/usr/bin/$SHIM"
-# EOF
+# export the chrome binary location, so it's easier to tell chromedriver
+# about the non-standard location
+cat <<EOF >$BUILD_DIR/.profile.d/010_google-chrome.sh
+export GOOGLE_CHROME_BIN="\$HOME/.apt/opt/google/$BIN"
+export GOOGLE_CHROME_SHIM="\$HOME/.apt/usr/bin/$SHIM"
+EOF
