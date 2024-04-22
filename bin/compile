@@ -141,3 +141,6 @@ find $BUILD_DIR/.apt -type f -ipath '*/pkgconfig/*.pc' | xargs --no-run-if-empty
 cat <<EOF >$BUILD_DIR/.profile.d/010_google-chrome.sh
 export GOOGLE_CHROME_BIN="\$HOME/.apt/opt/google/chrome/chrome"
 EOF
+
+# Clean up Apt Cache
+apt-get clean
