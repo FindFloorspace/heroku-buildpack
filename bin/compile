@@ -142,5 +142,8 @@ cat <<EOF >$BUILD_DIR/.profile.d/010_google-chrome.sh
 export GOOGLE_CHROME_BIN="\$HOME/.apt/opt/google/chrome/chrome"
 EOF
 
-# Clean up Apt Cache
-apt-get clean
+# Clean up
+rm -rf $BUILD_DIR/static
+rm -rf $BUILD_DIR/staff/static
+rm -rf $BUILD_DIR/public/static
+#apt-get $APT_OPTIONS -y clean
