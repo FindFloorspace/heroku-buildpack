@@ -148,3 +148,7 @@ rm -rf $BUILD_DIR/static/*
 rm -rf $BUILD_DIR/staff/static/*
 rm -rf $BUILD_DIR/public/static/*
 apt-get $APT_OPTIONS -y clean
+
+# Show the python environment
+pip freeze
+
