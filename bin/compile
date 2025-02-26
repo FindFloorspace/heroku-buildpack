@@ -42,5 +42,5 @@ apt-get $APT_OPTIONS -y clean
 
 # Show the python environment
 topic "Python Environment"
-pip freeze
+pip freeze | indent
 
